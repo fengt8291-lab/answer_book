@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答案之书</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1C1C1C;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: sans-serif;
+        }
+        
+        .container {
+            position: relative;
+            width: 380px;
+            height: 700px;
+            margin-top: 20px;
+        }
+        
+        .canvas {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://img.alicdn.com/imgextra/i3/O1CN01FSw38T1Ne6L2mg3Mb_!!6000000001594-2-tps-936-1200.png');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border-radius: 8px;
+        }
+        
+        .answer-box {
+            position: absolute;
+            top: 44px;
+            left: 32px;
+            width: 300px;
+            height: 190px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .answer {
+            font-size: 60px;
+            line-height: 65px;
+            color: #F9DBB3;
+            font-family: 'SimSun', serif;
+            font-weight: bold;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .answer-line1 {
+            margin-left: 0;
+        }
+        
+        .answer-line2 {
+            margin-left: 30px; /* 缩进 */
+        }
+        
+        .explanation {
+            position: absolute;
+            top: 256px; /* 44px + 190px + 22px */
+            left: 32px;
+            width: 300px;
+            font-size: 16px;
+            line-height: 26px;
+            color: white;
+            font-family: 'SimSun', serif;
+            text-align: left;
+        }
+        
+        .button {
+            width: 300px;
+            height: 32px;
+            background-color: #1C1C1C;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .button:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="canvas">
+            <div class="answer-box" id="answerBox" style="display: none;">
+                <div class="answer">
+                    <div class="answer-line1" id="answerLine1"></div>
+                    <div class="answer-line2" id="answerLine2"></div>
+                </div>
+            </div>
+            <div class="explanation" id="explanation" style="display: none;"></div>
+        </div>
+    </div>
+    <button class="button" id="generateBtn">默念问题、寻找答案</button>
+
+    <script>
+        // 答案数据 - 50个不重复的答案
+        const answers = [
+            { answer: ["前路漫漫", "终有光明"], explanation: "虽然目前面临困难，但只要坚持下去，最终会迎来光明的未来。" },
+            { answer: ["顺其自然", "水到渠成"], explanation: "不要强求，顺应事物发展的自然规律，成功会自然而然地到来。" },
+            { answer: ["心有所向", "素履以往"], explanation: "只要心中有目标，即使条件简陋也能实现愿望。" },
+            { answer: ["山重水复", "柳暗花明"], explanation: "困境中不要放弃，转机往往就在前方。" },
+            { answer: ["天道酬勤", "功不唐捐"], explanation: "努力不会白费，上天会回报勤劳的人。" },
+            { answer: ["守得云开", "见月明时"], explanation: "坚持下去，终会等到云散月明的时刻。" },
+            { answer: ["春风得意", "马蹄疾驰"], explanation: "运势正佳，应把握时机快速发展。" },
+            { answer: ["厚德载物", "自强不息"], explanation: "以深厚的品德承载万物，不断自我完善。" },
+            { answer: ["宁静致远", "淡泊明志"], explanation: "内心宁静才能实现远大目标，淡泊名利才能明确志向。" },
+            { answer: ["机不可失", "时不再来"], explanation: "抓住当前的机会，因为机会不会重来。" },
+            { answer: ["未雨绸缪", "防患未然"], explanation: "提前做好准备，预防可能出现的问题。" },
+            { answer: ["知行合一", "方得始终"], explanation: "理论与实践相结合，才能实现初心。" },
+            { answer: ["滴水穿石", "非一日功"], explanation: "坚持不懈的努力，终会取得成功。" },
+            { answer: ["塞翁失马", "焉知非福"], explanation: "暂时的损失可能带来意想不到的好处。" },
+            { answer: ["百折不挠", "终成大器"], explanation: "经历挫折而不屈服，最终会成就大事。" },
+            { answer: ["千里之行", "始于足下"], explanation: "再远的路程也要从脚下开始，从小事做起。" },
+            { answer: ["学而时习", "温故知新"], explanation: "学习并时常复习，温习旧知识可以获得新见解。" },
+            { answer: ["虚怀若谷", "海纳百川"], explanation: "保持谦虚的心态，才能接受更多的知识和意见。" },
+            { answer: ["持之以恒", "必有所得"], explanation: "坚持做一件事，一定会有收获。" },
+            { answer: ["知足常乐", "心安理得"], explanation: "懂得知足的人常常感到快乐，内心安宁。" },
+            { answer: ["积少成多", "聚沙成塔"], explanation: "积累少量的东西可以变成大量，小事积累可成大事。" },
+            { answer: ["积善成德", "福泽绵长"], explanation: "持续行善可以积累德行，带来长远的福报。" },
+            { answer: ["志存高远", "脚踏实地"], explanation: "要有远大的志向，同时要踏实做好每件事。" },
+            { answer: ["德才兼备", "方堪大用"], explanation: "既有品德又有才能，才能承担重要责任。" },
+            { answer: ["见贤思齐", "见不贤自省"], explanation: "看到贤人就向他看齐，看到不贤的人就反省自己。" },
+            { answer: ["温润如玉", "品性高洁"], explanation: "品德温润如美玉，性情高洁脱俗。" },
+            { answer: ["胸怀天下", "志在四方"], explanation: "有远大的抱负和广阔的胸怀。" },
+            { answer: ["修身养性", "完善自我"], explanation: "通过修养身心来完善自己。" },
+            { answer: ["刚柔并济", "进退有度"], explanation: "既要有刚强的一面，也要有柔和的一面，进退都要有分寸。" },
+            { answer: ["以和为贵", "和谐共处"], explanation: "以和谐为最珍贵，与人和谐相处。" },
+            { answer: ["厚德载福", "积善之家"], explanation: "深厚的品德能承载福报，行善的家庭必有余庆。" },
+            { answer: ["自强不息", "奋斗不止"], explanation: "不断自我完善，永远不懈怠。" },
+            { answer: ["厚德载物", "包容万物"], explanation: "以深厚的品德承载万物，包容一切。" },
+            { answer: ["谦逊有礼", "受人敬重"], explanation: "保持谦逊有礼貌，会受到他人的敬重。" },
+            { answer: ["诚信为本", "立身之基"], explanation: "诚信是做人的根本，是立足社会的基础。" },
+            { answer: ["勤勉努力", "天道酬勤"], explanation: "勤奋努力，上天会回报勤劳的人。" },
+            { answer: ["心怀梦想", "勇敢前行"], explanation: "心中有梦想，就要勇敢地去追求。" },
+            { answer: ["珍惜当下", "把握今朝"], explanation: "珍惜现在的时光，把握今天的机会。" },
+            { answer: ["学无止境", "追求卓越"], explanation: "学习没有尽头，要不断追求卓越。" },
+            { answer: ["宽容待人", "和谐相处"], explanation: "以宽容的心态对待他人，促进和谐。" },
+            { answer: ["坚韧不拔", "百折不挠"], explanation: "意志坚定，面对困难不屈服。" },
+            { answer: ["心平气和", "处事不惊"], explanation: "内心平静，处理事务时保持冷静。" },
+            { answer: ["乐观向上", "积极面对"], explanation: "保持乐观的心态，积极面对生活。" },
+            { answer: ["脚踏实地", "稳步前行"], explanation: "做事踏实，稳步前进。" },
+            { answer: ["志同道合", "携手共进"], explanation: "与志向相同的人一起努力，共同进步。" },
+            { answer: ["心存善念", "广结善缘"], explanation: "心中存有善念，广泛结交善缘。" },
+            { answer: ["知恩图报", "饮水思源"], explanation: "知道感恩并回报恩情，记住帮助过自己的人。" },
+            { answer: ["心如明镜", "洞察秋毫"], explanation: "内心清明如镜，能洞察细微之处。" },
+            { answer: ["淡泊名利", "宁静致远"], explanation: "不追求名利，内心宁静才能实现远大目标。" },
+            { answer: ["胸怀宽广", "包容万物"], explanation: "心胸宽广，能够包容一切。" }
+        ];
+
+        // 获取DOM元素
+        const generateBtn = document.getElementById('generateBtn');
+        const answerBox = document.getElementById('answerBox');
+        const answerLine1 = document.getElementById('answerLine1');
+        const answerLine2 = document.getElementById('answerLine2');
+        const explanation = document.getElementById('explanation');
+
+        // 点击按钮生成随机答案
+        generateBtn.addEventListener('click', function() {
+            // 随机选择一个答案
+            const randomIndex = Math.floor(Math.random() * answers.length);
+            const selectedAnswer = answers[randomIndex];
+            
+            // 显示答案
+            answerLine1.textContent = selectedAnswer.answer[0];
+            answerLine2.textContent = selectedAnswer.answer[1];
+            explanation.textContent = selectedAnswer.explanation;
+            
+            // 显示答案和解释
+            answerBox.style.display = 'block';
+            explanation.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
